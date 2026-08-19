@@ -9,12 +9,13 @@ public class Pulpit : MonoBehaviour
 
     private float timer;
     private bool spawnTriggered = false;
-    private TextMeshPro timerText;
+    private bool isInitialized = false;
+    private TMP_Text timerText;
     private PulpitManager pulpitManager;
 
     private void Awake()
     {
-        timerText = GetComponentInChildren<TextMeshPro>();
+        timerText = GetComponentInChildren<TMP_Text>();
     }
 
     public void Init(PulpitManager manager, Vector3 gridPos, float minDestroy, float maxDestroy, float spawnTime)
@@ -25,11 +26,14 @@ public class Pulpit : MonoBehaviour
         pulpitSpawnTime = spawnTime;
         timer = destroyTime;
         spawnTriggered = false;
+        isInitialized = true;
         UpdateTimerUI();
     }
 
     private void Update()
     {
+        if (!isInitialized || pulpitManager == null) return;
+
         timer -= Time.deltaTime;
         UpdateTimerUI();
 
@@ -53,7 +57,7 @@ public class Pulpit : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && pulpitManager != null)
         {
             pulpitManager.OnDoofusStepped(this);
         }

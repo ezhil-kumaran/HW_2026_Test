@@ -28,11 +28,11 @@ public class GameConfig : MonoBehaviour
 {
     public static GameConfig Instance { get; private set; }
     public GameConfigData Config { get; private set; } = new GameConfigData();
+    public bool IsLoaded { get; private set; } = false;
 
     public event Action<GameConfigData> OnConfigLoaded;
 
     private const string ConfigUrl = "https://s3.ap-south-1.amazonaws.com/superstars.assetbundles.testbuild/doofus_game/doofus_diary.json";
-    private bool configLoaded = false;
 
     private void Awake()
     {
@@ -40,12 +40,17 @@ public class GameConfig : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            StartCoroutine(LoadConfig());
         }
         else
         {
             Destroy(gameObject);
+            return;
         }
+    }
+
+    private void Start()
+    {
+        StartCoroutine(LoadConfig());
     }
 
     private IEnumerator LoadConfig()
@@ -60,18 +65,20 @@ public class GameConfig : MonoBehaviour
                 try
                 {
                     Config = JsonUtility.FromJson<GameConfigData>(www.downloadHandler.text);
-                    configLoaded = true;
+                    Debug.Log("<color=green>GameConfig loaded successfully from server!</color>");
                 }
-                catch
+                catch (Exception e)
                 {
-                    Debug.LogWarning("Failed to parse config JSON. Using defaults.");
+                    Debug.LogWarning($"Failed to parse config JSON: {e.Message}. Using default fallback values.");
                 }
             }
             else
             {
-                Debug.LogWarning("Failed to fetch config. Using defaults.");
+                Debug.LogWarning($"Failed to fetch config ({www.error}). Using default fallback values.");
             }
         }
+
+        IsLoaded = true;
         OnConfigLoaded?.Invoke(Config);
     }
 }

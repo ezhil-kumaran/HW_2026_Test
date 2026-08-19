@@ -3,18 +3,34 @@ using UnityEngine;
 
 public class PulpitManager : MonoBehaviour
 {
+    [Header("Prefab & Hierarchy References")]
     public GameObject pulpitPrefab;
     public Transform pulpitsParent;
 
-    private List<Pulpit> activePulpits = new List<Pulpit>();
-    private HashSet<Vector3> occupiedPositions = new HashSet<Vector3>();
-    private float minDestroy, maxDestroy, spawnTime;
+    private readonly List<Pulpit> activePulpits = new List<Pulpit>();
+    private readonly HashSet<Vector3> occupiedPositions = new HashSet<Vector3>();
+    private float minDestroy = 4f;
+    private float maxDestroy = 5f;
+    private float spawnTime = 2.5f;
 
     private void Start()
     {
-        GameConfig.Instance.OnConfigLoaded += OnConfigLoaded;
-        if (GameConfig.Instance.Config != null)
-            ApplyConfig(GameConfig.Instance.Config);
+        if (GameConfig.Instance != null)
+        {
+            GameConfig.Instance.OnConfigLoaded += OnConfigLoaded;
+            if (GameConfig.Instance.Config != null)
+            {
+                ApplyConfig(GameConfig.Instance.Config);
+            }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (GameConfig.Instance != null)
+        {
+            GameConfig.Instance.OnConfigLoaded -= OnConfigLoaded;
+        }
     }
 
     private void OnConfigLoaded(GameConfigData config)
@@ -27,33 +43,45 @@ public class PulpitManager : MonoBehaviour
         minDestroy = config.pulpit_data.min_pulpit_destroy_time;
         maxDestroy = config.pulpit_data.max_pulpit_destroy_time;
         spawnTime = config.pulpit_data.pulpit_spawn_time;
-        StartGame();
     }
 
     public void StartGame()
     {
         ClearAllPulpits();
-        Vector3 startPos = Vector3.zero;
-        SpawnPulpit(startPos);
+        SpawnPulpit(Vector3.zero);
     }
 
     public void ClearAllPulpits()
     {
-        foreach (var p in activePulpits)
-            Destroy(p.gameObject);
+        for (int i = activePulpits.Count - 1; i >= 0; i--)
+        {
+            if (activePulpits[i] != null)
+            {
+                Destroy(activePulpits[i].gameObject);
+            }
+        }
         activePulpits.Clear();
         occupiedPositions.Clear();
     }
 
     public void SpawnPulpit(Vector3 gridPos)
     {
-        GameObject go = Instantiate(pulpitPrefab, gridPos, Quaternion.identity, pulpitsParent);
+        if (pulpitPrefab == null)
+        {
+            Debug.LogError("PulpitPrefab is not assigned in PulpitManager!");
+            return;
+        }
+
+        Transform parent = (pulpitsParent != null) ? pulpitsParent : transform;
+        GameObject go = Instantiate(pulpitPrefab, gridPos, Quaternion.identity, parent);
+
         Pulpit pulpit = go.GetComponent<Pulpit>();
         pulpit.Init(this, gridPos, minDestroy, maxDestroy, spawnTime);
+
         activePulpits.Add(pulpit);
         occupiedPositions.Add(gridPos);
 
-        // Keep only 2 pulpits
+        // Keep maximum of 2 platforms active simultaneously
         if (activePulpits.Count > 2)
         {
             DestroyPulpit(activePulpits[0]);
@@ -62,6 +90,8 @@ public class PulpitManager : MonoBehaviour
 
     public void DestroyPulpit(Pulpit pulpit)
     {
+        if (pulpit == null) return;
+
         occupiedPositions.Remove(pulpit.gridPosition);
         activePulpits.Remove(pulpit);
         Destroy(pulpit.gameObject);
@@ -69,14 +99,23 @@ public class PulpitManager : MonoBehaviour
 
     public void OnPulpitSpawnTimeReached(Pulpit current)
     {
-        if (activePulpits.Count >= 2) return;
-
-        Vector3[] directions = {
+        // Direction offsets (Platform width = 9 units)
+        List<Vector3> directions = new List<Vector3>
+        {
             Vector3.forward * 9f,
             Vector3.back * 9f,
             Vector3.right * 9f,
             Vector3.left * 9f
         };
+
+        // Shuffle directions to spawn randomly
+        for (int i = 0; i < directions.Count; i++)
+        {
+            Vector3 temp = directions[i];
+            int randomIndex = Random.Range(i, directions.Count);
+            directions[i] = directions[randomIndex];
+            directions[randomIndex] = temp;
+        }
 
         foreach (var dir in directions)
         {
@@ -84,17 +123,16 @@ public class PulpitManager : MonoBehaviour
             if (!occupiedPositions.Contains(newPos))
             {
                 SpawnPulpit(newPos);
-                break;
+                return;
             }
         }
     }
 
     public void OnDoofusStepped(Pulpit pulpit)
     {
-        if (!GameManager.Instance.HasSteppedOnPulpit(pulpit))
+        if (GameManager.Instance != null && !GameManager.Instance.HasSteppedOnPulpit(pulpit))
         {
             GameManager.Instance.IncrementScore(pulpit);
         }
     }
 }
-
