@@ -51,6 +51,18 @@ public class PulpitManager : MonoBehaviour
         SpawnPulpit(Vector3.zero);
     }
 
+    public void StopSpawning()
+    {
+        // Cancel all active countdown/spawn coroutines on all existing pulpits
+        for (int i = 0; i < activePulpits.Count; i++)
+        {
+            if (activePulpits[i] != null)
+            {
+                activePulpits[i].StopAllCoroutines();
+            }
+        }
+    }
+
     public void ClearAllPulpits()
     {
         for (int i = activePulpits.Count - 1; i >= 0; i--)
@@ -66,6 +78,10 @@ public class PulpitManager : MonoBehaviour
 
     public void SpawnPulpit(Vector3 gridPos)
     {
+        // Don't spawn if game is already over
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing)
+            return;
+
         if (pulpitPrefab == null)
         {
             Debug.LogError("PulpitPrefab is not assigned in PulpitManager!");
@@ -99,6 +115,10 @@ public class PulpitManager : MonoBehaviour
 
     public void OnPulpitSpawnTimeReached(Pulpit current)
     {
+        // Guard check: Halt spawning if the player is dead / game over
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing)
+            return;
+
         // Direction offsets (Platform width = 9 units)
         List<Vector3> directions = new List<Vector3>
         {
@@ -108,7 +128,7 @@ public class PulpitManager : MonoBehaviour
             Vector3.left * 9f
         };
 
-        // Shuffle directions to spawn randomly
+        // Shuffle directions
         for (int i = 0; i < directions.Count; i++)
         {
             Vector3 temp = directions[i];
