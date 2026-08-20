@@ -49,7 +49,7 @@ public class DoofusController : MonoBehaviour
 
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
-        Vector3 move = new Vector3(h, 0, v).normalized * moveSpeed*2;
+        Vector3 move = new Vector3(h, 0, v).normalized * moveSpeed*1.5f;
         rb.linearVelocity = new Vector3(move.x, rb.linearVelocity.y, move.z);
         // Death check
         if (transform.position.y < -5f)

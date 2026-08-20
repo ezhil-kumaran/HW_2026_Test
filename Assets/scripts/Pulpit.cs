@@ -52,21 +52,28 @@ public class Pulpit : MonoBehaviour
     private void UpdateTimerUI()
     {
         if (timerText != null)
-            timerText.text = $"{Mathf.Max(0, timer):0.0}s";
+        {
+            // "0.00" formats the float with 2 decimal places (e.g. 1.84)
+            timerText.text = Mathf.Max(0f, timer).ToString("0.00");
+        }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private bool hasGivenScore = false;
+
+    private void OnTriggerStay(Collider other)
     {
+        if (hasGivenScore) return;
+
         if (other.CompareTag("Player") && pulpitManager != null)
         {
-            // Calculate 2D horizontal distance between platform center and Doofus
+            // 2D Distance check between platform center and player
             Vector2 pulpitPos2D = new Vector2(transform.position.x, transform.position.z);
             Vector2 playerPos2D = new Vector2(other.transform.position.x, other.transform.position.z);
 
-            // Platform is 9x9, so half-width is 4.5. 
-            // Only trigger if player is within 4 units of this platform's center.
+            // Within 4 units of platform center
             if (Vector2.Distance(pulpitPos2D, playerPos2D) < 4.0f)
             {
+                hasGivenScore = true;
                 pulpitManager.OnDoofusStepped(this);
             }
         }
