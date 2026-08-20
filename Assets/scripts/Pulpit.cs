@@ -59,7 +59,16 @@ public class Pulpit : MonoBehaviour
     {
         if (other.CompareTag("Player") && pulpitManager != null)
         {
-            pulpitManager.OnDoofusStepped(this);
+            // Calculate 2D horizontal distance between platform center and Doofus
+            Vector2 pulpitPos2D = new Vector2(transform.position.x, transform.position.z);
+            Vector2 playerPos2D = new Vector2(other.transform.position.x, other.transform.position.z);
+
+            // Platform is 9x9, so half-width is 4.5. 
+            // Only trigger if player is within 4 units of this platform's center.
+            if (Vector2.Distance(pulpitPos2D, playerPos2D) < 4.0f)
+            {
+                pulpitManager.OnDoofusStepped(this);
+            }
         }
     }
 }

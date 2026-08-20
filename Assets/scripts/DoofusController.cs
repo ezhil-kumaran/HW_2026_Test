@@ -49,15 +49,8 @@ public class DoofusController : MonoBehaviour
 
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
-        Vector3 move = new Vector3(h, 0, v).normalized * moveSpeed;
-
-        // Note: For Unity 2022 and older use rb.velocity instead of rb.linearVelocity
-#if UNITY_6000_0_OR_NEWER
+        Vector3 move = new Vector3(h, 0, v).normalized * moveSpeed*2;
         rb.linearVelocity = new Vector3(move.x, rb.linearVelocity.y, move.z);
-#else
-        rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
-#endif
-
         // Death check
         if (transform.position.y < -5f)
         {
@@ -74,11 +67,7 @@ public class DoofusController : MonoBehaviour
         isDead = false;
         transform.position = position;
 
-#if UNITY_6000_0_OR_NEWER
         rb.linearVelocity = Vector3.zero;
-#else
-        rb.velocity = Vector3.zero;
-#endif
 
         rb.angularVelocity = Vector3.zero;
     }

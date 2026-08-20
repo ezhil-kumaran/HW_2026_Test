@@ -142,7 +142,7 @@ public class GameManager : MonoBehaviour
     private void UpdateScoreUI()
     {
         if (scoreText != null)
-            scoreText.text = $"Score: {score}";
+            scoreText.text = $"{score}";
 
         if (highScoreText != null)
             highScoreText.text = $"High Score: {highScore}";
