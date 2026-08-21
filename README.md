@@ -16,6 +16,23 @@ https://github.com/user-attachments/assets/435cba9c-2aec-4b33-bde0-0184285e511a
 A dynamic, grid-based survival platformer built with Unity and C#. Control Doofus across randomly generating floating pulpits, collect bonus rings, and survive on a collapsing path before time runs out.
 
 ---
+## Scripts present and their functions:
+* **`CameraFollow.cs`**
+Smoothly follows the player character (Doofus) from a fixed offset distance using interpolation to keep the view centered on the action without jarring movements.
+* **`DoofusController.cs`**
+Handles player movement (WASD / Arrow Keys), physics, and rotation. It controls the character's Animator (`Idle` $\leftrightarrow$ `Run` transitions) and detects when the player falls off a platform to trigger Game Over.
+* **`GameConfig.cs`**
+Reads and deserializes the external `Doofus Diary` JSON file. It broadcasts game balance parameters (player speed, pulpit spawn time, min/max destruction timers) to other systems using events.
+* **`GameManager.cs`**
+The core state manager that tracks the game loop (`Playing`, `GameOver`), updates live score and high scores (`PlayerPrefs`), controls UI panels, and handles restart/scene routing.
+* **`MainMenuController.cs`**
+Manages the Start Menu UI interactions, specifically handling scene loading when pressing **Play** and exiting the application when clicking **Quit**.
+* **`Pulpit.cs`**
+Attached to each individual platform. It manages the pulpit's self-destruction countdown timer, signals the manager when it's time to spawn the next platform, and detects when Doofus steps on it.
+* **`PulpitManager.cs`**
+Coordinates platform generation on the grid in random adjacent directions ($+X, -X, +Z, -Z$). It enforces the 2-platform maximum rule, cleans up expired pulpits, and handles bonus collectible spawning.
+* **`SimpleCollectibleScript.cs`**
+Controls the bonus star/ring collectible. It handles continuous rotation, trigger collision with the player, spawning sound/particle VFX, and awarding $+5$ bonus points to the score via `GameManager`.
 
 ## Gameplay & Features
 
