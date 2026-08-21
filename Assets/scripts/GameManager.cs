@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -20,7 +21,16 @@ public class GameManager : MonoBehaviour
     private readonly HashSet<Pulpit> steppedPulpits = new HashSet<Pulpit>();
     private DoofusController doofus;
     private PulpitManager pulpitManager;
+    [Header("Scene Navigation")]
+    [Tooltip("The build index of your StartScene / Main Menu.")]
+    [SerializeField] private int mainMenuSceneIndex = 1; // Set to your StartScene build index
 
+    // Hook this to your 'Return to Main Menu' button's OnClick()
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f; // Ensure physics/time are unpaused
+        SceneManager.LoadScene(mainMenuSceneIndex);
+    }
     private void Awake()
     {
         if (Instance == null)
