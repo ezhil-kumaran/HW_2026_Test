@@ -114,7 +114,7 @@ public class GameManager : MonoBehaviour
             gameOverPanel.SetActive(true);
 
         if (finalScoreText != null)
-            finalScoreText.text = $"Score: {score}";
+            finalScoreText.text = $"{score}";
 
         if (score > highScore)
         {
@@ -133,7 +133,11 @@ public class GameManager : MonoBehaviour
         steppedPulpits.Add(pulpit);
         UpdateScoreUI();
     }
-
+    public void AddBonusScore(int amount)
+    {
+        score += amount;
+        UpdateScoreUI();
+    }
     public bool HasSteppedOnPulpit(Pulpit pulpit)
     {
         return pulpit != null && steppedPulpits.Contains(pulpit);

@@ -3,9 +3,13 @@ using UnityEngine;
 
 public class PulpitManager : MonoBehaviour
 {
-    [Header("Prefab & Hierarchy References")]
+    [Header("Prefab References")]
     public GameObject pulpitPrefab;
+    public GameObject collectiblePrefab; // Assign Star Collectible Prefab here
     public Transform pulpitsParent;
+
+    [Header("Collectible Settings")]
+    [Range(0f, 1f)] public float collectibleSpawnChance = 0.7f; // 70% chance to spawn a star
 
     private readonly List<Pulpit> activePulpits = new List<Pulpit>();
     private readonly HashSet<Vector3> occupiedPositions = new HashSet<Vector3>();
@@ -48,12 +52,11 @@ public class PulpitManager : MonoBehaviour
     public void StartGame()
     {
         ClearAllPulpits();
-        SpawnPulpit(Vector3.zero);
+        SpawnPulpit(Vector3.zero, isStartPlatform: true);
     }
 
     public void StopSpawning()
     {
-        // Cancel all active countdown/spawn coroutines on all existing pulpits
         for (int i = 0; i < activePulpits.Count; i++)
         {
             if (activePulpits[i] != null)
@@ -76,9 +79,8 @@ public class PulpitManager : MonoBehaviour
         occupiedPositions.Clear();
     }
 
-    public void SpawnPulpit(Vector3 gridPos)
+    public void SpawnPulpit(Vector3 gridPos, bool isStartPlatform = false)
     {
-        // Don't spawn if game is already over
         if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing)
             return;
 
@@ -97,11 +99,29 @@ public class PulpitManager : MonoBehaviour
         activePulpits.Add(pulpit);
         occupiedPositions.Add(gridPos);
 
-        // Keep maximum of 2 platforms active simultaneously
+        // Spawn collectible on newly generated platforms (skip starting platform)
+        if (!isStartPlatform && collectiblePrefab != null && Random.value <= collectibleSpawnChance)
+        {
+            SpawnCollectibleOnPulpit(go.transform, gridPos);
+        }
+
         if (activePulpits.Count > 2)
         {
             DestroyPulpit(activePulpits[0]);
         }
+    }
+
+    private void SpawnCollectibleOnPulpit(Transform pulpitTransform, Vector3 pulpitPos)
+    {
+        // Safe inner boundary: random offset within -3 to +3 on X and Z
+        float randomX = Random.Range(-3.0f, 3.0f);
+        float randomZ = Random.Range(-3.0f, 3.0f);
+        float heightY = 0.8f; // Hover slightly above platform surface
+
+        Vector3 spawnLocation = pulpitPos + new Vector3(randomX, heightY, randomZ);
+
+        // Parent to the pulpit so it gets deleted automatically when the platform expires
+        Instantiate(collectiblePrefab, spawnLocation, Quaternion.identity, pulpitTransform);
     }
 
     public void DestroyPulpit(Pulpit pulpit)
@@ -115,11 +135,9 @@ public class PulpitManager : MonoBehaviour
 
     public void OnPulpitSpawnTimeReached(Pulpit current)
     {
-        // Guard check: Halt spawning if the player is dead / game over
         if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Playing)
             return;
 
-        // Direction offsets (Platform width = 9 units)
         List<Vector3> directions = new List<Vector3>
         {
             Vector3.forward * 9f,
@@ -128,7 +146,6 @@ public class PulpitManager : MonoBehaviour
             Vector3.left * 9f
         };
 
-        // Shuffle directions
         for (int i = 0; i < directions.Count; i++)
         {
             Vector3 temp = directions[i];
